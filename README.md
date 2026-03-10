@@ -26,7 +26,7 @@ PX4 SITL → MicroXRCE-DDS → ROS2 nodes → Navigation logic
 
 ## System Architecture
 
-![Drone System Architecture](architecture_diagram/system_architecture.png)
+![Drone System Architecture](architecture_diagram/system_architecture.drawio.png)
 
 ## Author
 
