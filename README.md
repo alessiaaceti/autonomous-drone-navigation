@@ -24,6 +24,10 @@ PX4 SITL → MicroXRCE-DDS → ROS2 nodes → Navigation logic
 - Gazebo
 - C++
 
+## System Architecture
+
+![Drone System Architecture](architecture_diagram/system_architecture.png)
+
 ## Author
 
 Alessia Aceti
