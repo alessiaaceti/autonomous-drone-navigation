@@ -1,6 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/int32.hpp> // <-- NUOVO: Libreria per inviare numeri interi!
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 
@@ -15,9 +15,9 @@ public:
             std::bind(&DroneVisionNode::image_callback, this, std::placeholders::_1)
         );
 
+        // <-- NUOVO: Creiamo il "Megafono" (Publisher) per trasmettere l'errore!
         error_pub_ = this->create_publisher<std_msgs::msg::Int32>("/target_error_x", 10);
 
-        // ECCO LA FRASE GIUSTA!
         RCLCPP_INFO(this->get_logger(), "Nodo Target Tracking avviato. Pubblico l'errore su /target_error_x");
     }
 
@@ -61,6 +61,7 @@ private:
                 cv::putText(frame, "Tracking... Err X: " + std::to_string(error_x), 
                             cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
 
+                // <-- NUOVO: Impacchettiamo il numero e lo urliamo sulla rete ROS2!
                 std_msgs::msg::Int32 error_msg;
                 error_msg.data = error_x;
                 error_pub_->publish(error_msg);
@@ -80,6 +81,7 @@ private:
     }
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
+    // <-- NUOVO: Dichiariamo la variabile per il Publisher
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr error_pub_; 
 };
 
