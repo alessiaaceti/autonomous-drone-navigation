@@ -9,17 +9,21 @@ public:
     CameraViewer() : Node("camera_viewer")
     {
         // Sottoscrizione al topic bridgato Gazebo -> ROS2
+        // Usiamo SensorDataQoS per essere compatibili con il Best Effort del bridge
         sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-            "/world/default/model/x500_0/link/base_link/sensor/front_camera/image",
-            10,
+            "/world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/image",
+            rclcpp::SensorDataQoS(),
             std::bind(&CameraViewer::callback, this, std::placeholders::_1));
 
-        RCLCPP_INFO(this->get_logger(), "Camera Viewer node started.");
+        RCLCPP_INFO(this->get_logger(), "Camera Viewer in attesa di immagini...");
     }
 
 private:
     void callback(const sensor_msgs::msg::Image::SharedPtr msg)
     {
+        // Stampa solo la prima volta che riceve un frame, così capiamo se il link funziona
+        RCLCPP_INFO_ONCE(this->get_logger(), "Primo frame video ricevuto!");
+        
         try
         {
             // Converte il messaggio ROS Image in cv::Mat
