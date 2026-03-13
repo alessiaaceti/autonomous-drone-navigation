@@ -70,6 +70,15 @@ ament_target_dependencies(
 
 target_link_libraries(camera_viewer ${OpenCV_LIBS})
 
+add_executable(drone_controller src/drone_controller.cpp)
+ament_target_dependencies(drone_controller rclcpp std_msgs px4_msgs)
+
+install(TARGETS
+  camera_viewer
+  drone_controller
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(TARGETS
   camera_viewer
   DESTINATION lib/${PROJECT_NAME}
