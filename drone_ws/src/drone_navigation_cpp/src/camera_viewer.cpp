@@ -15,10 +15,11 @@ public:
             std::bind(&DroneVisionNode::image_callback, this, std::placeholders::_1)
         );
 
-        error_pub_ = this->create_publisher<std_msgs::msg::Int32>("/target_error_x", 10);
+        error_x_pub_ = this->create_publisher<std_msgs::msg::Int32>("/target_error_x", 10);
+        error_y_pub_ = this->create_publisher<std_msgs::msg::Int32>("/target_error_y", 10); // NUOVO TOPIC
         area_pub_ = this->create_publisher<std_msgs::msg::Int32>("/target_area", 10);
 
-        RCLCPP_INFO(this->get_logger(), "Nodo Target Tracking avviato. Pubblico errore e area.");
+        RCLCPP_INFO(this->get_logger(), "Nodo Visione 3D avviato.");
     }
 
     ~DroneVisionNode() {
@@ -57,35 +58,34 @@ private:
                 cv::line(frame, cv::Point(cx_screen, cy_screen), cv::Point(cx_obj, cy_obj), cv::Scalar(255, 0, 0), 2);
                 
                 int error_x = cx_obj - cx_screen;
+                int error_y = cy_obj - cy_screen; // NUOVO CALCOLO
                 
-                cv::putText(frame, "Tracking... Err X: " + std::to_string(error_x), 
+                cv::putText(frame, "Err X: " + std::to_string(error_x) + " Err Y: " + std::to_string(error_y), 
                             cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 255, 0), 2);
 
-                std_msgs::msg::Int32 error_msg;
-                error_msg.data = error_x;
-                error_pub_->publish(error_msg);
+                std_msgs::msg::Int32 msg_x, msg_y, msg_area;
+                
+                msg_x.data = error_x;
+                error_x_pub_->publish(msg_x);
 
-                std_msgs::msg::Int32 area_msg;
-                area_msg.data = static_cast<int>(m.m00);
-                area_pub_->publish(area_msg);
+                msg_y.data = error_y;
+                error_y_pub_->publish(msg_y);
+
+                msg_area.data = static_cast<int>(m.m00);
+                area_pub_->publish(msg_area);
 
             } else {
                 cv::putText(frame, "Target PERSO", 
                             cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
                 
-                // Ferma la rotazione
-                std_msgs::msg::Int32 error_msg;
-                error_msg.data = 0;
-                error_pub_->publish(error_msg);
-
-                // Ferma l'avanzamento
-                std_msgs::msg::Int32 area_msg;
-                area_msg.data = 0; 
-                area_pub_->publish(area_msg);
+                std_msgs::msg::Int32 zero_msg;
+                zero_msg.data = 0;
+                error_x_pub_->publish(zero_msg);
+                error_y_pub_->publish(zero_msg);
+                area_pub_->publish(zero_msg);
             }
 
-            cv::imshow("Drone Camera (Target Tracking)", frame);
-            cv::imshow("Maschera HSV", mask);
+            cv::imshow("Drone Camera", frame);
             cv::waitKey(1);
 
         } catch (cv_bridge::Exception& e) {
@@ -94,7 +94,8 @@ private:
     }
 
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
-    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr error_pub_; 
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr error_x_pub_; 
+    rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr error_y_pub_; 
     rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr area_pub_;
 };
 
