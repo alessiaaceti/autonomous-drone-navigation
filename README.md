@@ -30,6 +30,14 @@ PX4 SITL → MicroXRCE-DDS → ROS2 nodes → Navigation logic
 
 ## Demo
 
+Nel video seguente viene mostrato un test completo del sistema in ambiente simulato. 
+
+**Cosa dimostra il test:**
+* Riconoscimento visivo del target a terra tramite la telecamera di bordo.
+* Calcolo in tempo reale dell'errore di posizionamento (assi X e Y).
+* Correzione autonoma della traiettoria del drone su Gazebo.
+* Innesco della procedura di atterraggio di precisione (Precision Landing) una volta centrato il bersaglio.
+
 [![Demo del progetto](https://img.youtube.com/vi/xQcLm-7-HeQ/0.jpg)](https://www.youtube.com/watch?v=xQcLm-7-HeQ)
 
 *Clicca sull'immagine per guardare il video del test di atterraggio autonomo.*
