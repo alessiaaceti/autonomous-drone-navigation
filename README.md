@@ -28,6 +28,8 @@ PX4 SITL → MicroXRCE-DDS → ROS2 nodes → Navigation logic
 
 ![Drone System Architecture](architecture_diagram/system_architecture.png)
 
+## Demo
+
 [![Demo del progetto](https://img.youtube.com/vi/xQcLm-7-HeQ/0.jpg)](https://www.youtube.com/watch?v=INSERISCI_QUI_ID)
 
 *Clicca sull'immagine per guardare il video del test di atterraggio autonomo.*
