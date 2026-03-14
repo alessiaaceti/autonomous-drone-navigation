@@ -59,6 +59,15 @@ L'ambiente simulato è stato scansionato con successo. Nella cartella `/results`
 * `mappa.ply`: Il file contenente la nuvola di punti 3D esportata. Questo modello può essere visualizzato con software come MeshLab o CloudCompare.
 * `screenshot_slam.png`: Immagini del processo di mapping in tempo reale tramite `rtabmap_viz`.
 
+### Visualizzazione dei Sensori
+![Depth Camera in rqt](images/depth_camera.png)
+
+### Processo di Mappatura (SLAM)
+![Interfaccia RTAB-Map](images/rtabmap_interface.png)
+
+### Nuvola di Punti (Point Cloud 3D)
+![Risultato su MeshLab](images/meshlab_pointcloud.png)
+
 ## Author
 
 Alessia Aceti
