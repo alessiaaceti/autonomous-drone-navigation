@@ -60,13 +60,13 @@ L'ambiente simulato è stato scansionato con successo. Nella cartella `/results`
 * `screenshot_slam.png`: Immagini del processo di mapping in tempo reale tramite `rtabmap_viz`.
 
 ### Visualizzazione dei Sensori
-![Depth Camera in rqt](images/depth_camera.png)
+![Depth Camera in rqt](images/depth_sensor.png)
 
 ### Processo di Mappatura (SLAM)
-![Interfaccia RTAB-Map](images/rtabmap_interface.png)
+![Interfaccia RTAB-Map](images/slam_process.png)
 
 ### Nuvola di Punti (Point Cloud 3D)
-![Risultato su MeshLab](images/meshlab_pointcloud.png)
+![Risultato su MeshLab](images/pointcloud_result.png)
 
 ## Author
 
