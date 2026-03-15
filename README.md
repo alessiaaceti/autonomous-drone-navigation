@@ -43,6 +43,9 @@ Nel video seguente viene mostrato un test completo del sistema in ambiente simul
 *Clicca sull'immagine per guardare il video del test di atterraggio autonomo.*
 
 ## Fase 2: 3D Mapping e RGB-D SLAM
+# Autonomous Drone Navigation & 3D Mapping
+
+[GIF]
 
 In questa fase del progetto, il drone è stato configurato per mappare un ambiente sconosciuto all'interno del simulatore **Gazebo**, utilizzando un approccio di tipo **RGB-D SLAM** (Simultaneous Localization and Mapping).
 
