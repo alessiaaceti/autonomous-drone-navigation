@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Carica l'ambiente (modifica il percorso se necessario)
+SOURCE_COMMAND="source /opt/ros/humble/setup.bash; source ~/ros_gz_ws/install/setup.bash"
+
+echo "🚀 Avvio il sistema di Mapping SLAM..."
+
+# 1. Avvio dei Ponti (Bridge)
+gnome-terminal --tab --title="Bridges" -- bash -c "$SOURCE_COMMAND; \
+ros2 run ros_gz_bridge parameter_bridge \"/world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo\" & \
+ros2 run ros_gz_image image_bridge /world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/image /depth_camera; exec bash"
+
+# 2. Avvio RTAB-Map (Cervello)
+gnome-terminal --tab --title="RTAB-Map" -- bash -c "$SOURCE_COMMAND; \
+ros2 launch rtabmap_launch rtabmap.launch.py \
+    rtabmap_args:=\"--delete_db_on_start\" \
+    rgb_topic:=/world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/image \
+    depth_topic:=/depth_camera \
+    camera_info_topic:=/world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/camera_info \
+    frame_id:=camera_link \
+    visual_odometry:=true \
+    approx_sync:=true \
+    use_sim_time:=true \
+    qos:=2; exec bash"
+
+# 3. Avvio RTAB-Map Viz (Interfaccia)
+gnome-terminal --tab --title="Visualization" -- bash -c "$SOURCE_COMMAND; \
+ros2 run rtabmap_viz rtabmap_viz \
+    --ros-args \
+    -r __ns:=/rtabmap \
+    -p use_sim_time:=true \
+    -p subscribe_rgb:=true \
+    -p subscribe_depth:=true \
+    -p approx_sync:=true \
+    -p qos_image:=2 \
+    -p qos_camera_info:=2 \
+    -r odom:=/rtabmap/odom \
+    -r rgb/image:=/world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/image \
+    -r depth/image:=/depth_camera \
+    -r rgb/camera_info:=/world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/camera_info; exec bash"

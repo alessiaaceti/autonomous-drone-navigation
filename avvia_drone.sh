@@ -3,7 +3,7 @@ echo "Avvio sistema del drone"
 
 # 1. Avvia Gazebo e PX4 (sostituisci col tuo comando/cartella esatta)
 echo "Avvio Gazebo..."
-gnome-terminal --title="Gazebo" -- bash -c "cd ~/PX4-Autopilot && make px4_sitl gz_x500; exec bash"
+gnome-terminal --title="Gazebo" -- bash -c "cd ~/PX4-Autopilot && make px4_sitl gz_x500_depth; exec bash"
 
 # Aspetta 8 secondi per dare tempo alla simulazione 3D di caricarsi
 sleep 8
