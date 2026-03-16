@@ -49,7 +49,7 @@ In questa fase, il drone è stato trasformato in un esploratore autonomo capace 
 ### 🛠️ Setup dell'Ambiente
 Per rendere il test significativo, l'ambiente Gazebo è stato arricchito con oggetti complessi (un cassonetto, una scala, modelli geometrici) per fornire alla telecamera sufficienti **visual features** per l'algoritmo di SLAM.
 
-![Setup della Simulazione](images/system_overview.jpg)
+![Setup della Simulazione](images/system_overview.png)
 *Integrazione PX4, QGroundControl e RTAB-Map in esecuzione.*
 
 ### 🧠 Il Processo: Feature Matching & Odometria
@@ -61,7 +61,7 @@ Il cuore del sistema è **RTAB-Map**. Qui sotto puoi vedere come il drone "vede"
 ### 📍 Risultati: Traiettoria e Nuvola di Punti
 Dopo il volo, il drone ha generato una mappa densa dell'ambiente. La linea ciano rappresenta il percorso esatto seguito dal drone (Trajectory), mentre i punti ricostruiscono la geometria degli ostacoli.
 
-![Traiettoria e Mappa 3D](images/slam_trajectory.jpg)
+![Traiettoria e Mappa 3D](images/slam_trajectory.png)
 *Visualizzazione della traiettoria di volo e della mappa 3D generata in tempo reale.*
 
 ### 🏆 Risultato Finale (Point Cloud)
