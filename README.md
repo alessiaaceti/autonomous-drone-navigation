@@ -42,34 +42,33 @@ Nel video seguente viene mostrato un test completo del sistema in ambiente simul
 
 *Clicca sull'immagine per guardare il video del test di atterraggio autonomo.*
 
-## Fase 2: 3D Mapping e RGB-D SLAM
-# Autonomous Drone Navigation & 3D Mapping
+## Fase 2: 3D Mapping e RGB-D SLAM 🗺️
 
-![Demo_mapping](images/demo_mapping.gif)
+In questa fase, il drone è stato trasformato in un esploratore autonomo capace di ricostruire l'ambiente in 3D. 
 
-In questa fase del progetto, il drone è stato configurato per mappare un ambiente sconosciuto all'interno del simulatore **Gazebo**, utilizzando un approccio di tipo **RGB-D SLAM** (Simultaneous Localization and Mapping).
+### 🛠️ Setup dell'Ambiente
+Per rendere il test significativo, l'ambiente Gazebo è stato arricchito con oggetti complessi (un cassonetto, una scala, modelli geometrici) per fornire alla telecamera sufficienti **visual features** per l'algoritmo di SLAM.
 
-### Architettura e Strumenti
-* **Sensori:** Il drone simulato (modello x500) è equipaggiato con una telecamera RGB (IMX214) e un sensore di profondità (Depth Camera).
-* **Algoritmo SLAM:** È stato utilizzato il pacchetto **RTAB-Map** (Real-Time Appearance-Based Mapping) per ROS 2. RTAB-Map processa i topic `/image` e `/depth_camera` per calcolare la Visual Odometry (capire come si muove il drone nello spazio) e generare una mappa 3D dell'ambiente (Graph SLAM).
-* **Integrazione:** La comunicazione tra il controllore di volo PX4, il simulatore Gazebo e i nodi ROS 2 di RTAB-Map è gestita tramite il *Micro XRCE-DDS Agent* e il *ROS Bridge*.
+![Setup della Simulazione](images/system_overview.jpg)
+*Integrazione PX4, QGroundControl e RTAB-Map in esecuzione.*
 
-### Esecuzione
-Durante la simulazione, il drone è stato pilotato manualmente (teleoperazione via QGroundControl) a bassa velocità attorno agli ostacoli. RTAB-Map ha elaborato i frame sincronizzati in tempo reale, estraendo le feature visive per la localizzazione ed espandendo progressivamente una *Dense Point Cloud* (Nuvola di Punti Densa).
+### 🧠 Il Processo: Feature Matching & Odometria
+Il cuore del sistema è **RTAB-Map**. Qui sotto puoi vedere come il drone "vede" il mondo: estrae punti chiave dagli oggetti (linee azzurre nel "Local Match") per calcolare il proprio spostamento senza l'uso del GPS.
 
-### Risultati
-L'ambiente simulato è stato scansionato con successo. Nella cartella `/results` è possibile trovare:
-* `mappa.ply`: Il file contenente la nuvola di punti 3D esportata. Questo modello può essere visualizzato con software come MeshLab o CloudCompare.
-* `screenshot_slam.png`: Immagini del processo di mapping in tempo reale tramite `rtabmap_viz`.
+![Feature Matching](images/feature_matching.png)
+*Riconoscimento delle feature visive sulla scala e sul cassonetto per il calcolo dell'odometria.*
 
-### Visualizzazione dei Sensori
-![Depth Camera in rqt](images/depth_sensor.png)
+### 📍 Risultati: Traiettoria e Nuvola di Punti
+Dopo il volo, il drone ha generato una mappa densa dell'ambiente. La linea ciano rappresenta il percorso esatto seguito dal drone (Trajectory), mentre i punti ricostruiscono la geometria degli ostacoli.
 
-### Processo di Mappatura (SLAM)
-![Interfaccia RTAB-Map](images/slam_process.png)
+![Traiettoria e Mappa 3D](images/slam_trajectory.jpg)
+*Visualizzazione della traiettoria di volo e della mappa 3D generata in tempo reale.*
 
-### Nuvola di Punti (Point Cloud 3D)
-![Risultato su MeshLab](images/pointcloud_result.png)
+### 🏆 Risultato Finale (Point Cloud)
+Ecco la ricostruzione finale esportata. Il drone ha creato un "gemello digitale" dell'ambiente di simulazione con precisione millimetrica.
+
+![Final Point Cloud](images/final_point_cloud.png)
+*Nuvola di punti 3D densa dell'area di test.*
 
 ## Author
 
