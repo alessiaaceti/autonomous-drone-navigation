@@ -42,29 +42,26 @@ Nel video seguente viene mostrato un test completo del sistema in ambiente simul
 
 *Clicca sull'immagine per guardare il video del test di atterraggio autonomo.*
 
-## Fase 2: 3D Mapping e RGB-D SLAM 🗺️
+## Fase 2: 3D Mapping e RGB-D SLAM
 
 In questa fase, il drone è stato trasformato in un esploratore autonomo capace di ricostruire l'ambiente in 3D. 
 
-### 🛠️ Setup dell'Ambiente
+### Setup dell'Ambiente
 Per rendere il test significativo, l'ambiente Gazebo è stato arricchito con oggetti complessi (un cassonetto, una scala, modelli geometrici) per fornire alla telecamera sufficienti **visual features** per l'algoritmo di SLAM.
 
-![Setup della Simulazione](images/system_overview.png)
-*Integrazione PX4, QGroundControl e RTAB-Map in esecuzione.*
-
-### 🧠 Il Processo: Feature Matching & Odometria
+### Il Processo: Feature Matching & Odometria
 Il cuore del sistema è **RTAB-Map**. Qui sotto puoi vedere come il drone "vede" il mondo: estrae punti chiave dagli oggetti (linee azzurre nel "Local Match") per calcolare il proprio spostamento senza l'uso del GPS.
 
 ![Feature Matching](images/feature_matching.png)
 *Riconoscimento delle feature visive sulla scala e sul cassonetto per il calcolo dell'odometria.*
 
-### 📍 Risultati: Traiettoria e Nuvola di Punti
+### Risultati: Traiettoria e Nuvola di Punti
 Dopo il volo, il drone ha generato una mappa densa dell'ambiente. La linea ciano rappresenta il percorso esatto seguito dal drone (Trajectory), mentre i punti ricostruiscono la geometria degli ostacoli.
 
 ![Traiettoria e Mappa 3D](images/slam_trajectory.png)
 *Visualizzazione della traiettoria di volo e della mappa 3D generata in tempo reale.*
 
-### 🏆 Risultato Finale (Point Cloud)
+### Risultato Finale (Point Cloud)
 Ecco la ricostruzione finale esportata. Il drone ha creato un "gemello digitale" dell'ambiente di simulazione con precisione millimetrica.
 
 ![Final Point Cloud](images/final_point_cloud.png)
