@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+
+set -u
+
+# ============================================================
+# Autonomous Drone Navigation - Full Simulation Launcher
+# PX4 + Gazebo + MicroXRCEAgent + ROS 2 camera bridge + viewer
+# ============================================================
+
+PX4_DIR="$HOME/PX4-Autopilot"
+ROS_WS="$HOME/autonomous-drone-navigation/drone_ws"
+
+# Gazebo 8 + ROS Jazzy vendor configuration
+export GZ_CONFIG_PATH="/usr/share/gz:/opt/ros/jazzy/opt/gz_transport_vendor/share/gz:/opt/ros/jazzy/opt/gz_msgs_vendor/share/gz"
+
+CAMERA_TOPIC="/world/default/model/x500_depth_0/link/camera_link/sensor/IMX214/image"
+
+echo ""
+echo "============================================================"
+echo "   AUTONOMOUS DRONE NAVIGATION"
+echo "   PX4 + Gazebo + MicroXRCEAgent + ROS 2 Vision"
+echo "============================================================"
+echo ""
+
+# ------------------------------------------------------------
+# Basic checks
+# ------------------------------------------------------------
+
+if ! command -v gnome-terminal >/dev/null 2>&1; then
+    echo "ERROR: gnome-terminal is not installed."
+    echo "Install with: sudo apt install gnome-terminal"
+    exit 1
+fi
+
+if [ ! -d "$PX4_DIR" ]; then
+    echo "ERROR: PX4 directory not found:"
+    echo "$PX4_DIR"
+    exit 1
+fi
+
+if [ ! -d "$ROS_WS/install" ]; then
+    echo "ERROR: ROS 2 workspace not built:"
+    echo "$ROS_WS"
+    exit 1
+fi
+
+if ! command -v MicroXRCEAgent >/dev/null 2>&1; then
+    echo "ERROR: MicroXRCEAgent not found."
+    echo "Expected executable: MicroXRCEAgent"
+    exit 1
+fi
+
+echo "[OK] PX4 found"
+echo "[OK] ROS 2 workspace found"
+echo "[OK] MicroXRCEAgent found"
+echo "[OK] Gazebo configuration ready"
+echo ""
+
+# ------------------------------------------------------------
+# 1. PX4 + Gazebo
+# ------------------------------------------------------------
+
+echo "[1/4] Starting PX4 + Gazebo..."
+
+gnome-terminal --title="PX4 + Gazebo" -- bash -c "
+    echo '=========================================='
+    echo ' PX4 + GAZEBO'
+    echo '=========================================='
+    export GZ_CONFIG_PATH='$GZ_CONFIG_PATH'
+    cd '$PX4_DIR'
+    echo ''
+    echo 'Starting PX4 SITL with X500 depth camera...'
+    echo ''
+    make px4_sitl gz_x500_depth
+    EXIT_CODE=\$?
+    echo ''
+    echo 'PX4/Gazebo terminated with exit code: \$EXIT_CODE'
+    read -p 'Press ENTER to close this terminal...'
+"
+
+echo "Waiting for PX4/Gazebo to initialize..."
+sleep 8
+
+# ------------------------------------------------------------
+# 2. MicroXRCEAgent
+# ------------------------------------------------------------
+
+echo "[2/4] Starting MicroXRCEAgent..."
+
+gnome-terminal --title="MicroXRCEAgent" -- bash -c "
+    echo '=========================================='
+    echo ' MicroXRCE-DDS AGENT'
+    echo '=========================================='
+    echo ''
+    echo 'Listening on UDP port 8888...'
+    echo ''
+    MicroXRCEAgent udp4 -p 8888
+    EXIT_CODE=\$?
+    echo ''
+    echo 'MicroXRCEAgent terminated with exit code: \$EXIT_CODE'
+    read -p 'Press ENTER to close this terminal...'
+"
+
+echo "Waiting for MicroXRCEAgent..."
+sleep 2
+
+# ------------------------------------------------------------
+# 3. Gazebo -> ROS 2 camera bridge
+# ------------------------------------------------------------
+
+echo "[3/4] Starting Gazebo -> ROS 2 camera bridge..."
+
+gnome-terminal --title="ROS 2 Camera Bridge" -- bash -c "
+    echo '=========================================='
+    echo ' GAZEBO -> ROS 2 CAMERA BRIDGE'
+    echo '=========================================='
+    echo ''
+    source /opt/ros/jazzy/setup.bash
+    export GZ_CONFIG_PATH='$GZ_CONFIG_PATH'
+    echo 'Bridging camera topic:'
+    echo '$CAMERA_TOPIC'
+    echo ''
+    ros2 run ros_gz_bridge parameter_bridge \
+        '$CAMERA_TOPIC@sensor_msgs/msg/Image@gz.msgs.Image'
+    EXIT_CODE=\$?
+    echo ''
+    echo 'Camera bridge terminated with exit code: \$EXIT_CODE'
+    read -p 'Press ENTER to close this terminal...'
+"
+
+echo "Waiting for camera bridge..."
+sleep 3
+
+# ------------------------------------------------------------
+# 4. ROS 2 camera viewer
+# ------------------------------------------------------------
+
+echo "[4/4] Starting ROS 2 camera viewer..."
+
+gnome-terminal --title="ROS 2 Camera Viewer" -- bash -c "
+    echo '=========================================='
+    echo ' ROS 2 CAMERA VIEWER'
+    echo '=========================================='
+    echo ''
+    source /opt/ros/jazzy/setup.bash
+    source '$ROS_WS/install/setup.bash'
+    export GZ_CONFIG_PATH='$GZ_CONFIG_PATH'
+    echo 'Starting camera_viewer...'
+    echo ''
+    ros2 run drone_navigation_cpp camera_viewer
+    EXIT_CODE=\$?
+    echo ''
+    echo 'camera_viewer terminated with exit code: \$EXIT_CODE'
+    read -p 'Press ENTER to close this terminal...'
+"
+
+echo ""
+echo "============================================================"
+echo " Simulation startup sequence launched."
+echo "============================================================"
+echo ""
+echo "Expected terminals:"
+echo "  1. PX4 + Gazebo"
+echo "  2. MicroXRCEAgent"
+echo "  3. ROS 2 Camera Bridge"
+echo "  4. ROS 2 Camera Viewer"
+echo ""
+echo "Camera topic:"
+echo "  $CAMERA_TOPIC"
+echo ""

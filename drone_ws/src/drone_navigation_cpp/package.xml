@@ -2,15 +2,23 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>drone_navigation_cpp</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="alessia@todo.todo">alessia</maintainer>
-  <license>TODO: License declaration</license>
+  <version>0.1.0</version>
+
+  <description>
+    C++ ROS 2 nodes for autonomous drone navigation, perception,
+    state estimation, offboard control, and PX4 integration.
+  </description>
+
+  <maintainer email="acetialessia22@gmail.com">Alessia Aceti</maintainer>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>px4_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>cv_bridge</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
