@@ -40,10 +40,9 @@ public:
                     this,
                     std::placeholders::_1));
         
-        // Square flight path: x, y, z
+        // Square flight path after takeoff: x, y, z
         // PX4 uses NED coordinates, therefore altitude is negative.
         path_ = {
-            {0.0f, 0.0f, -2.5f},
             {3.0f, 0.0f, -2.5f},
             {3.0f, 3.0f, -2.5f},
             {0.0f, 3.0f, -2.5f},
@@ -112,12 +111,11 @@ private:
             return;
         }
 
-        // Keep the first waypoint as the takeoff position.
-        // Once the drone has reached approximately 2.5 m altitude,
-        // start the square at waypoint 1.
-        if (current_wp_ == 0) {
+        // Wait until the drone has reached the takeoff altitude.
+        if (!takeoff_complete_) {
             if (arm_requested_ && current_z_ <= -2.0f) {
-                current_wp_ = 1;
+                takeoff_complete_ = true;
+                current_wp_ = 0;
 
                 RCLCPP_INFO(
                     this->get_logger(),
@@ -262,6 +260,7 @@ private:
     float current_z_ = 0.0f;
 
     bool position_valid_ = false;
+    bool takeoff_complete_ = false;
     bool offboard_requested_ = false;
     bool arm_requested_ = false;
 };
