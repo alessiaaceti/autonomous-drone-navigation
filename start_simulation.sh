@@ -227,14 +227,14 @@ start_simulation() {
 
 
     # --------------------------------------------------------
-    # 4. Gazebo -> ROS 2 Camera Bridge
+    # 4. Gazebo -> ROS 2 Camera + Depth Bridge
     # --------------------------------------------------------
 
-    echo "[4/5] Starting ROS 2 Camera Bridge..."
+    echo "[4/5] Starting ROS 2 Camera + Depth Bridge..."
 
     gnome-terminal --title="ROS 2 Camera Bridge" -- bash -c "
         echo '=========================================='
-        echo ' GAZEBO -> ROS 2 CAMERA BRIDGE'
+        echo ' GAZEBO -> ROS 2 CAMERA + DEPTH BRIDGE'
         echo '=========================================='
         echo ''
 
@@ -243,17 +243,22 @@ start_simulation() {
 
         export GZ_CONFIG_PATH='$GZ_CONFIG_PATH_VALUE'
 
-        echo 'Bridging camera topic:'
+        echo 'Bridging RGB camera topic:'
         echo '$CAMERA_TOPIC'
         echo ''
 
+        echo 'Bridging depth topic:'
+        echo '/depth_camera'
+        echo ''
+
         ros2 run ros_gz_bridge parameter_bridge \
-            '$CAMERA_TOPIC@sensor_msgs/msg/Image@gz.msgs.Image'
+            '$CAMERA_TOPIC@sensor_msgs/msg/Image@gz.msgs.Image' \
+            '/depth_camera@sensor_msgs/msg/Image@gz.msgs.Image'
 
         EXIT_CODE=\$?
 
         echo ''
-        echo 'Camera bridge terminated with exit code: \$EXIT_CODE'
+        echo 'Camera + depth bridge terminated with exit code: \$EXIT_CODE'
         read -p 'Press ENTER to close this terminal...'
     "
 
@@ -296,12 +301,14 @@ start_simulation() {
     echo "  1. PX4 + Gazebo"
     echo "  2. QGroundControl"
     echo "  3. MicroXRCEAgent"
-    echo "  4. ROS 2 Camera Bridge"
+    echo "  4. ROS 2 Camera + Depth Bridge"
     echo "  5. ROS 2 Perception"
     echo ""
     echo "Camera topic:"
     echo "  $CAMERA_TOPIC"
     echo ""
+    echo "Depth topic:"
+    echo "  /depth_camera"
     echo "To stop everything:"
     echo "  ./start_simulation.sh stop"
     echo ""

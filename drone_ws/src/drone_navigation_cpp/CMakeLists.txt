@@ -69,7 +69,6 @@ install(TARGETS
 # ------------------------------------------------------------
 
 add_executable(camera_viewer src/camera_viewer.cpp)
-
 ament_target_dependencies(
   camera_viewer
   rclcpp
@@ -77,15 +76,47 @@ ament_target_dependencies(
   std_msgs
   cv_bridge
 )
+target_link_libraries(camera_viewer ${OpenCV_LIBS})
+install(TARGETS camera_viewer DESTINATION lib/${PROJECT_NAME})
 
-target_link_libraries(camera_viewer
-  ${OpenCV_LIBS}
-)
+# ------------------------------------------------------------
+# Depth-based Obstacle Detector
+# ------------------------------------------------------------
 
-install(TARGETS
-  camera_viewer
-  DESTINATION lib/${PROJECT_NAME}
+add_executable(obstacle_detector src/obstacle_detector.cpp)
+ament_target_dependencies(
+  obstacle_detector
+  rclcpp
+  sensor_msgs
+  cv_bridge
 )
+install(TARGETS obstacle_detector DESTINATION lib/${PROJECT_NAME})
+
+# ------------------------------------------------------------
+# Obstacle Avoidance Decision Node
+# ------------------------------------------------------------
+
+add_executable(obstacle_avoidance src/obstacle_avoidance.cpp)
+ament_target_dependencies(
+  obstacle_avoidance
+  rclcpp
+  std_msgs
+)
+install(TARGETS obstacle_avoidance DESTINATION lib/${PROJECT_NAME})
+
+# ------------------------------------------------------------
+# Depth Visualization
+# ------------------------------------------------------------
+
+add_executable(depth_visualizer src/depth_visualizer.cpp)
+ament_target_dependencies(
+  depth_visualizer
+  rclcpp
+  sensor_msgs
+  cv_bridge
+)
+target_link_libraries(depth_visualizer ${OpenCV_LIBS})
+install(TARGETS depth_visualizer DESTINATION lib/${PROJECT_NAME})
 
 # ------------------------------------------------------------
 # Drone Controller
