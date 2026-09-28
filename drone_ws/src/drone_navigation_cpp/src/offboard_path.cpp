@@ -33,13 +33,13 @@ public:
         // Subscribe to the vehicle's estimated local position from PX4.
         position_sub_ =
             this->create_subscription<px4_msgs::msg::VehicleLocalPosition>(
-                "/fmu/out/vehicle_local_position",
-                10,
+                "/fmu/out/vehicle_local_position_v1",
+                rclcpp::SensorDataQoS(),
                 std::bind(
                     &OffboardPath::position_callback,
                     this,
                     std::placeholders::_1));
-
+        
         // Square flight path: x, y, z
         // PX4 uses NED coordinates, therefore altitude is negative.
         path_ = {
