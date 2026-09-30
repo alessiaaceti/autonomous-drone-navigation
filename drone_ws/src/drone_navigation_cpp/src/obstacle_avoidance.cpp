@@ -19,6 +19,11 @@ public:
                     this,
                     std::placeholders::_1));
 
+        avoidance_command_publisher_ =
+            this->create_publisher<std_msgs::msg::String>(
+                "/avoidance_command",
+                10);
+
         RCLCPP_INFO(
             this->get_logger(),
             "Obstacle avoidance node started.");
@@ -38,11 +43,11 @@ private:
         }
         else if (state == "LEFT")
         {
-            decision = "AVOID_RIGHT";
+            decision = "MOVE_RIGHT";
         }
         else if (state == "RIGHT")
         {
-            decision = "AVOID_LEFT";
+            decision = "MOVE_LEFT";
         }
         else if (state == "CENTER")
         {
@@ -50,11 +55,11 @@ private:
         }
         else if (state == "CENTER_LEFT")
         {
-            decision = "AVOID_RIGHT";
+            decision = "MOVE_RIGHT";
         }
         else if (state == "CENTER_RIGHT")
         {
-            decision = "AVOID_LEFT";
+            decision = "MOVE_LEFT";
         }
         else if (state == "BLOCKED")
         {
@@ -65,19 +70,22 @@ private:
             decision = "UNKNOWN";
         }
 
-        // Only report the decision when the state or decision changes.
-        if (state == last_state_ &&
-            decision == last_decision_)
+        // Only publish when the decision changes.
+        if (decision == last_decision_)
         {
             return;
         }
 
-        last_state_ = state;
         last_decision_ = decision;
+
+        std_msgs::msg::String command_msg;
+        command_msg.data = decision;
+
+        avoidance_command_publisher_->publish(command_msg);
 
         RCLCPP_INFO(
             this->get_logger(),
-            "Obstacle state: %-13s -> Decision: %s",
+            "Obstacle state: %-13s -> Command: %s",
             state.c_str(),
             decision.c_str());
     }
@@ -85,7 +93,9 @@ private:
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
         obstacle_subscription_;
 
-    std::string last_state_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr
+        avoidance_command_publisher_;
+
     std::string last_decision_;
 };
 

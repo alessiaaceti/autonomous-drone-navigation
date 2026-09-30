@@ -105,6 +105,24 @@ ament_target_dependencies(
 install(TARGETS obstacle_avoidance DESTINATION lib/${PROJECT_NAME})
 
 # ------------------------------------------------------------
+# Offboard Avoidance Controller
+# ------------------------------------------------------------
+
+add_executable(offboard_avoidance src/offboard_avoidance.cpp)
+
+ament_target_dependencies(
+  offboard_avoidance
+  rclcpp
+  std_msgs
+  px4_msgs
+)
+
+install(
+  TARGETS offboard_avoidance
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# ------------------------------------------------------------
 # Depth Visualization
 # ------------------------------------------------------------
 

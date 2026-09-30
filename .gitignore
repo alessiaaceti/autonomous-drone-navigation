@@ -2,3 +2,27 @@ build/
 install/
 log/
 .vscode/
+# Python virtual environments
+.venv/
+.venv-*/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# YOLO / ML artifacts
+*.pt
+runs/
+
+# Datasets
+datasets/
+
+# Generated images / test artifacts
+bus.jpg
+drone_frame.png
+
+# ROS 2 build artifacts
+drone_ws/build/
+drone_ws/install/
+drone_ws/log/
