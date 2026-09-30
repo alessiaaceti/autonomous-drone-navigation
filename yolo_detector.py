@@ -2,7 +2,8 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
-from std_msgs.msg import String
+from vision_msgs.msg import Detection2DArray, Detection2D
+from vision_msgs.msg import ObjectHypothesisWithPose
 from cv_bridge import CvBridge
 
 from ultralytics import YOLO
@@ -17,7 +18,15 @@ class YOLODetector(Node):
 
         self.bridge = CvBridge()
 
-        self.model = YOLO("yolov8n.pt")
+        self.model = YOLO(
+            "/home/alessia/autonomous-drone-navigation/runs/detect/visdrone_yolov8n/weights/best.pt"
+        )
+
+        self.target_classes = {
+            0: "pedestrian",
+            3: "car",
+            5: "truck"
+        }
 
         self.image_subscription = self.create_subscription(
             Image,
@@ -27,7 +36,7 @@ class YOLODetector(Node):
         )
 
         self.detection_publisher = self.create_publisher(
-            String,
+            Detection2DArray,
             "/yolo/detections",
             10
         )
@@ -48,33 +57,43 @@ class YOLODetector(Node):
             verbose=False
         )
 
-        detections = []
+        detection_msg = Detection2DArray()
+        detection_msg.header = msg.header
 
         for result in results:
 
             for box in result.boxes:
 
                 class_id = int(box.cls[0])
-                confidence = float(box.conf[0])
 
-                class_name = self.model.names[class_id]
+                if class_id not in self.target_classes:
+                    continue
+
+                confidence = float(box.conf[0])
+                class_name = self.target_classes[class_id]
 
                 x1, y1, x2, y2 = map(
-                    int,
+                    float,
                     box.xyxy[0]
                 )
 
-                detections.append(
-                    f"{class_name}:{confidence:.2f}:"
-                    f"{x1},{y1},{x2},{y2}"
-                )
+                detection = Detection2D()
 
-        detection_msg = String()
+                detection.header = msg.header
 
-        if detections:
-            detection_msg.data = "|".join(detections)
-        else:
-            detection_msg.data = "NONE"
+                hypothesis = ObjectHypothesisWithPose()
+                hypothesis.hypothesis.class_id = class_name
+                hypothesis.hypothesis.score = confidence
+
+                detection.results.append(hypothesis)
+
+                detection.bbox.center.position.x = (x1 + x2) / 2.0
+                detection.bbox.center.position.y = (y1 + y2) / 2.0
+
+                detection.bbox.size_x = x2 - x1
+                detection.bbox.size_y = y2 - y1
+
+                detection_msg.detections.append(detection)
 
         self.detection_publisher.publish(
             detection_msg
