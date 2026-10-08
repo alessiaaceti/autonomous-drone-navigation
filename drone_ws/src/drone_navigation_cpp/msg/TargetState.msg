@@ -1,3 +1,4 @@
+std_msgs/Header header
 bool detected
 string class_name
 float32 confidence

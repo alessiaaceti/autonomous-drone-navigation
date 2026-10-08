@@ -45,6 +45,9 @@ private:
     {
         drone_navigation_cpp::msg::TargetState target_msg;
 
+        // Propagate the timestamp of the YOLO detection.
+        target_msg.header = msg->header;
+
         target_msg.detected = false;
         target_msg.class_name = "";
         target_msg.confidence = 0.0f;

@@ -163,6 +163,7 @@ install(TARGETS
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TargetState.msg"
   "msg/DecisionState.msg"
+  DEPENDENCIES std_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
