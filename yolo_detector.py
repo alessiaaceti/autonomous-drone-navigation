@@ -9,6 +9,7 @@ from cv_bridge import CvBridge
 from ultralytics import YOLO
 
 import time
+from pathlib import Path
 
 
 class YOLODetector(Node):
@@ -18,9 +19,28 @@ class YOLODetector(Node):
 
         self.bridge = CvBridge()
 
-        self.model = YOLO(
-            "/home/alessia/autonomous-drone-navigation/runs/detect/visdrone_yolov8n/weights/best.pt"
+        default_model_path = str(
+            Path(__file__).resolve().parent
+            / "runs/detect/visdrone_yolov8n/weights/best.pt"
         )
+
+        self.declare_parameter(
+            "model_path",
+            default_model_path
+        )
+
+        self.declare_parameter("min_confidence", 0.10)
+
+        model_path = self.get_parameter("model_path").value
+        self.min_confidence = float(
+            self.get_parameter("min_confidence").value
+        )
+
+        self.get_logger().info(
+            f"Loading YOLO model: {model_path}"
+        )
+
+        self.model = YOLO(model_path)
 
         # Target = veicoli o persone di interesse.
         # VisDrone:
@@ -49,8 +69,6 @@ class YOLODetector(Node):
             "/yolo/detections",
             10
         )
-
-        self.min_confidence = 0.10
 
         self.frame_count = 0
         self.last_log_time = time.time()
