@@ -15,6 +15,19 @@ find_package(cv_bridge REQUIRED)
 find_package(vision_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
 
+
+# ------------------------------------------------------------
+# Custom Messages
+# ------------------------------------------------------------
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/TargetState.msg"
+  "msg/DecisionState.msg"
+  DEPENDENCIES std_msgs
+)
+
+ament_export_dependencies(rosidl_default_runtime)
+
 # ------------------------------------------------------------
 # Position Listener
 # ------------------------------------------------------------
@@ -151,22 +164,21 @@ ament_target_dependencies(
   px4_msgs
 )
 
+rosidl_get_typesupport_target(
+  cpp_typesupport_target
+  ${PROJECT_NAME}
+  "rosidl_typesupport_cpp"
+)
+
+target_link_libraries(
+  drone_controller
+  "${cpp_typesupport_target}"
+)
+
 install(TARGETS
   drone_controller
   DESTINATION lib/${PROJECT_NAME}
 )
-
-# ------------------------------------------------------------
-# Custom Messages
-# ------------------------------------------------------------
-
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/TargetState.msg"
-  "msg/DecisionState.msg"
-  DEPENDENCIES std_msgs
-)
-
-ament_export_dependencies(rosidl_default_runtime)
 
 # ------------------------------------------------------------
 # YOLO Target Tracker
@@ -180,9 +192,15 @@ ament_target_dependencies(
   vision_msgs
 )
 
-rosidl_target_interfaces(
+rosidl_get_typesupport_target(
+  yolo_tracker_typesupport_target
+  ${PROJECT_NAME}
+  "rosidl_typesupport_cpp"
+)
+
+target_link_libraries(
   yolo_target_tracker
-  ${PROJECT_NAME} "rosidl_typesupport_cpp"
+  "${yolo_tracker_typesupport_target}"
 )
 
 install(
@@ -202,9 +220,15 @@ ament_target_dependencies(
   std_msgs
 )
 
-rosidl_target_interfaces(
+rosidl_get_typesupport_target(
+  decision_layer_typesupport_target
+  ${PROJECT_NAME}
+  "rosidl_typesupport_cpp"
+)
+
+target_link_libraries(
   decision_layer
-  ${PROJECT_NAME} "rosidl_typesupport_cpp"
+  "${decision_layer_typesupport_target}"
 )
 
 install(
