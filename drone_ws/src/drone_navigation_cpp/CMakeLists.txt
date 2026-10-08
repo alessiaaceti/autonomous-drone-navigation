@@ -6,11 +6,13 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(px4_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(cv_bridge REQUIRED)
+find_package(vision_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
 
 # ------------------------------------------------------------
@@ -151,6 +153,61 @@ ament_target_dependencies(
 
 install(TARGETS
   drone_controller
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# ------------------------------------------------------------
+# Custom Messages
+# ------------------------------------------------------------
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/TargetState.msg"
+  "msg/DecisionState.msg"
+)
+
+ament_export_dependencies(rosidl_default_runtime)
+
+# ------------------------------------------------------------
+# YOLO Target Tracker
+# ------------------------------------------------------------
+
+add_executable(yolo_target_tracker src/yolo_target_tracker.cpp)
+
+ament_target_dependencies(
+  yolo_target_tracker
+  rclcpp
+  vision_msgs
+)
+
+rosidl_target_interfaces(
+  yolo_target_tracker
+  ${PROJECT_NAME} "rosidl_typesupport_cpp"
+)
+
+install(
+  TARGETS yolo_target_tracker
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# ------------------------------------------------------------
+# Decision Layer
+# ------------------------------------------------------------
+
+add_executable(decision_layer src/decision_layer.cpp)
+
+ament_target_dependencies(
+  decision_layer
+  rclcpp
+  std_msgs
+)
+
+rosidl_target_interfaces(
+  decision_layer
+  ${PROJECT_NAME} "rosidl_typesupport_cpp"
+)
+
+install(
+  TARGETS decision_layer
   DESTINATION lib/${PROJECT_NAME}
 )
 
