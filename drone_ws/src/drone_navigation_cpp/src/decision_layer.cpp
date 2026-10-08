@@ -1,3 +1,4 @@
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
@@ -17,7 +18,9 @@ public:
         : Node("decision_layer"),
           obstacle_state_("UNKNOWN"),
           target_received_(false),
-          obstacle_received_(false)
+          obstacle_received_(false),
+          obstacle_timeout_(std::chrono::milliseconds(500)),
+          target_timeout_(std::chrono::milliseconds(500))
     {
         target_subscription_ =
             this->create_subscription<
@@ -58,6 +61,14 @@ public:
         RCLCPP_INFO(
             this->get_logger(),
             "Safety priority: OBSTACLE > TARGET");
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Obstacle watchdog: 500 ms");
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Target watchdog: 500 ms");
     }
 
 
@@ -68,6 +79,7 @@ private:
     {
         latest_target_ = *msg;
         target_received_ = true;
+        last_target_time_ = this->get_clock()->now();
     }
 
 
@@ -76,6 +88,79 @@ private:
     {
         obstacle_state_ = msg->data;
         obstacle_received_ = true;
+        last_obstacle_time_ = this->get_clock()->now();
+    }
+
+
+    bool obstacle_data_is_fresh() const
+    {
+        if (!obstacle_received_)
+        {
+            return false;
+        }
+
+        const rclcpp::Time now =
+            this->get_clock()->now();
+
+        const auto age =
+            now - last_obstacle_time_;
+
+        return age <= obstacle_timeout_;
+    }
+
+
+    bool target_data_is_fresh() const
+    {
+        if (!target_received_)
+        {
+            return false;
+        }
+
+        const rclcpp::Time now =
+            this->get_clock()->now();
+
+        const auto age =
+            now - last_target_time_;
+
+        return age <= target_timeout_;
+    }
+
+
+    void fill_target_information(
+        drone_navigation_cpp::msg::DecisionState &decision,
+        bool target_fresh)
+    {
+        /*
+         * A stale target must not remain latched as detected.
+         *
+         * If the target stream stops, the safe interpretation
+         * is that there is currently no confirmed target.
+         */
+        decision.target_detected =
+            target_fresh &&
+            latest_target_.detected;
+
+        if (target_fresh)
+        {
+            decision.target_confidence =
+                latest_target_.confidence;
+
+            decision.target_error_x =
+                latest_target_.error_x;
+
+            decision.target_error_y =
+                latest_target_.error_y;
+
+            decision.target_area =
+                latest_target_.area;
+        }
+        else
+        {
+            decision.target_confidence = 0.0f;
+            decision.target_error_x = 0.0f;
+            decision.target_error_y = 0.0f;
+            decision.target_area = 0.0f;
+        }
     }
 
 
@@ -83,42 +168,44 @@ private:
     {
         drone_navigation_cpp::msg::DecisionState decision;
 
+        const bool obstacle_fresh =
+            obstacle_data_is_fresh();
+
+        const bool target_fresh =
+            target_data_is_fresh();
+
+
         /*
-         * Default safety behaviour.
+         * ----------------------------------------------------
+         * SAFETY WATCHDOG
+         * ----------------------------------------------------
          *
-         * Until we have received a valid obstacle state,
-         * do not authorize target tracking.
+         * Obstacle perception is safety-critical.
+         *
+         * If the detector has never produced a state, or the
+         * latest state is too old, we MUST NOT assume CLEAR.
          */
-        if (!obstacle_received_)
+        if (!obstacle_fresh)
         {
             decision.mode = "STOP";
-            decision.reason = "Waiting for obstacle state";
+
+            if (!obstacle_received_)
+            {
+                decision.reason =
+                    "Waiting for obstacle state";
+            }
+            else
+            {
+                decision.reason =
+                    "Obstacle state timeout";
+            }
+
             decision.obstacle_state = "UNKNOWN";
-
-            decision.target_detected =
-                target_received_ && latest_target_.detected;
-
             decision.safety_override = true;
 
-            decision.target_confidence =
-                target_received_
-                    ? latest_target_.confidence
-                    : 0.0f;
-
-            decision.target_error_x =
-                target_received_
-                    ? latest_target_.error_x
-                    : 0.0f;
-
-            decision.target_error_y =
-                target_received_
-                    ? latest_target_.error_y
-                    : 0.0f;
-
-            decision.target_area =
-                target_received_
-                    ? latest_target_.area
-                    : 0.0f;
+            fill_target_information(
+                decision,
+                target_fresh);
 
             publish_decision(decision);
             return;
@@ -126,7 +213,33 @@ private:
 
 
         /*
+         * ----------------------------------------------------
+         * EXPLICIT UNKNOWN
+         * ----------------------------------------------------
+         *
+         * UNKNOWN is never treated as CLEAR.
+         */
+        if (obstacle_state_ == "UNKNOWN")
+        {
+            decision.mode = "STOP";
+            decision.reason =
+                "Obstacle perception is unknown";
+            decision.obstacle_state = "UNKNOWN";
+            decision.safety_override = true;
+
+            fill_target_information(
+                decision,
+                target_fresh);
+
+            publish_decision(decision);
+            return;
+        }
+
+
+        /*
+         * ----------------------------------------------------
          * SAFETY PRIORITY
+         * ----------------------------------------------------
          *
          * A blocked path always overrides target tracking.
          */
@@ -158,11 +271,20 @@ private:
 
 
         /*
-         * No obstacle: target tracking can be used.
+         * ----------------------------------------------------
+         * TARGET TRACKING
+         * ----------------------------------------------------
+         *
+         * Target tracking is allowed only when:
+         *
+         *   1. obstacle data is fresh
+         *   2. obstacle state is CLEAR
+         *   3. target data is fresh
+         *   4. target is detected
          */
         else if (
             obstacle_state_ == "CLEAR" &&
-            target_received_ &&
+            target_fresh &&
             latest_target_.detected)
         {
             decision.mode = "TRACK_TARGET";
@@ -173,7 +295,7 @@ private:
 
 
         /*
-         * No obstacle and no target.
+         * CLEAR but no valid target.
          */
         else if (obstacle_state_ == "CLEAR")
         {
@@ -185,7 +307,9 @@ private:
 
 
         /*
-         * Unknown state: conservative behaviour.
+         * Unknown/unexpected obstacle state.
+         *
+         * Conservative fallback.
          */
         else
         {
@@ -196,30 +320,12 @@ private:
         }
 
 
-        decision.obstacle_state = obstacle_state_;
+        decision.obstacle_state =
+            obstacle_state_;
 
-        decision.target_detected =
-            target_received_ && latest_target_.detected;
-
-        decision.target_confidence =
-            target_received_
-                ? latest_target_.confidence
-                : 0.0f;
-
-        decision.target_error_x =
-            target_received_
-                ? latest_target_.error_x
-                : 0.0f;
-
-        decision.target_error_y =
-            target_received_
-                ? latest_target_.error_y
-                : 0.0f;
-
-        decision.target_area =
-            target_received_
-                ? latest_target_.area
-                : 0.0f;
+        fill_target_information(
+            decision,
+            target_fresh);
 
         publish_decision(decision);
     }
@@ -231,7 +337,8 @@ private:
         decision_publisher_->publish(decision);
 
         /*
-         * Only print when the decision changes.
+         * Print only when the decision mode changes.
+         * The message is still published every 100 ms.
          */
         if (decision.mode != last_mode_)
         {
@@ -260,15 +367,23 @@ private:
         drone_navigation_cpp::msg::DecisionState>::SharedPtr
         decision_publisher_;
 
-    rclcpp::TimerBase::SharedPtr decision_timer_;
+    rclcpp::TimerBase::SharedPtr
+        decision_timer_;
 
-    drone_navigation_cpp::msg::TargetState latest_target_;
+    drone_navigation_cpp::msg::TargetState
+        latest_target_;
 
     std::string obstacle_state_;
     std::string last_mode_;
 
     bool target_received_;
     bool obstacle_received_;
+
+    rclcpp::Time last_target_time_;
+    rclcpp::Time last_obstacle_time_;
+
+    std::chrono::milliseconds obstacle_timeout_;
+    std::chrono::milliseconds target_timeout_;
 };
 
 
