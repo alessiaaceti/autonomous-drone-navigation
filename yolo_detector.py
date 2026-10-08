@@ -50,6 +50,8 @@ class YOLODetector(Node):
             10
         )
 
+        self.min_confidence = 0.10
+
         self.frame_count = 0
         self.last_log_time = time.time()
 
@@ -58,6 +60,9 @@ class YOLODetector(Node):
         )
         self.get_logger().info(
             "Target classes: pedestrian, car, van, truck, bus"
+        )
+        self.get_logger().info(
+            f"Minimum confidence: {self.min_confidence:.2f}"
         )
 
     def image_callback(self, msg):
@@ -73,7 +78,7 @@ class YOLODetector(Node):
             results = self.model(
                 frame,
                 imgsz=1280,
-                conf=0.001,
+                conf=self.min_confidence,
                 verbose=False
             )
 

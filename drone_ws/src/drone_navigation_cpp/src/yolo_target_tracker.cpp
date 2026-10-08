@@ -31,6 +31,9 @@ public:
         image_width_ = 1920.0f;
         image_height_ = 1080.0f;
 
+        // Defense-in-depth: never accept weak detections.
+        min_confidence_ = 0.10f;
+
         RCLCPP_INFO(
             this->get_logger(),
             "YOLO Target Tracker started.");
@@ -81,6 +84,12 @@ private:
                 confidence);
 
             if (!is_target_class(class_name))
+            {
+                continue;
+            }
+
+            // Defense-in-depth confidence gate.
+            if (confidence < min_confidence_)
             {
                 continue;
             }
@@ -153,7 +162,9 @@ private:
     {
         return class_name == "pedestrian" ||
                class_name == "car" ||
-               class_name == "truck";
+               class_name == "van" ||
+               class_name == "truck" ||
+               class_name == "bus";
     }
 
     rclcpp::Subscription<vision_msgs::msg::Detection2DArray>::SharedPtr
@@ -164,6 +175,7 @@ private:
 
     float image_width_;
     float image_height_;
+    float min_confidence_;
 };
 
 int main(int argc, char *argv[])
